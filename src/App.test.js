@@ -1,8 +1,13 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { act } from "react";
+import { render, screen } from "@testing-library/react";
+import App from "./App";
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+test("renders the Nano Aakriti storefront and chat entry point", async () => {
+  await act(async () => {
+    render(<App />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  expect(screen.getAllByRole("img", { name: /nano aakriti/i }).length).toBeGreaterThan(0);
+  expect(screen.getByRole("button", { name: /chat with us/i })).toBeInTheDocument();
 });
