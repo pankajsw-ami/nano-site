@@ -75,17 +75,13 @@ useEffect(() => {
   };
 }, [open]);
 useEffect(() => {
-  if (!open || typeof window === "undefined") return;
+  if (typeof document === "undefined") return undefined;
 
-  const isMobile = window.matchMedia("(max-width: 700px)").matches;
-
-  if (!isMobile) return;
-
-  const previousOverflow = document.body.style.overflow;
-  document.body.style.overflow = "hidden";
+  const chatOpenClass = "nano-chat-open";
+  if (open) document.body.classList.add(chatOpenClass);
 
   return () => {
-    document.body.style.overflow = previousOverflow;
+    document.body.classList.remove(chatOpenClass);
   };
 }, [open]);
   // While the modal is closed, this is the single customer-side Realtime

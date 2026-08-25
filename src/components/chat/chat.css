@@ -994,6 +994,10 @@
 }
 
 @media (max-width: 700px) {
+  body.nano-chat-open {
+    overflow: hidden !important;
+  }
+
   .chat-floating-button {
     right: 14px;
     bottom: 14px;

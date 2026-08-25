@@ -100,6 +100,11 @@ const normalizeStockQuantity = (value, fallback = 10) => {
   return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : fallback;
 };
 
+const getAvailableStock = (product) => {
+  if (!product || product.outOfStock) return 0;
+  return normalizeStockQuantity(product.stockQuantity, 10);
+};
+
 const productRowFromDb = (row) => ({
   id: row.id,
   name: row.name,
@@ -523,7 +528,10 @@ function CartDrawer({ open, cartItems, cartCount, total, onClose, onQty, onRemov
                 </div>
               ) : (
                 <div style={{display:"flex",flexDirection:"column",gap:12}}>
-                  {cartItems.map(({ product, qty }) => (
+                  {cartItems.map(({ product, qty }) => {
+                    const availableStock = getAvailableStock(product);
+                    const atStockLimit = availableStock === 0 || qty >= availableStock;
+                    return (
                     <div key={product.id} style={{border:`1px solid ${C.gray}`,borderRadius:12,background:"rgba(248,247,244,0.82)",padding:12}}>
                       <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"flex-start"}}>
                         <div style={{minWidth:0}}>
@@ -536,12 +544,13 @@ function CartDrawer({ open, cartItems, cartCount, total, onClose, onQty, onRemov
                         <div style={{display:"flex",alignItems:"center",gap:8}}>
                           <button type="button" onClick={()=>onQty(product.id, -1)} style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.gray}`,background:"#fff",cursor:"pointer",fontSize:18,lineHeight:1}}>-</button>
                           <span style={{minWidth:24,textAlign:"center",fontFamily:"Inter, sans-serif",fontWeight:700,color:C.black}}>{qty}</span>
-                          <button type="button" onClick={()=>onQty(product.id, 1)} style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.gray}`,background:"#fff",cursor:"pointer",fontSize:18,lineHeight:1}}>+</button>
+                          <button type="button" onClick={()=>onQty(product.id, 1)} disabled={atStockLimit} aria-label={atStockLimit ? `Only ${availableStock} available` : `Increase ${product.name} quantity`} title={atStockLimit ? `Only ${availableStock} available` : "Increase quantity"} style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.gray}`,background:"#fff",color:atStockLimit?C.midGray:C.black,cursor:atStockLimit?"not-allowed":"pointer",fontSize:18,lineHeight:1,opacity:atStockLimit?0.55:1}}>+</button>
                         </div>
                         <strong style={{fontFamily:"Inter, sans-serif",fontSize:15,color:C.orange}}>Rs. {(product.price * qty).toLocaleString("en-IN")}</strong>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1050,19 +1059,6 @@ function FigurineConfigurator({ open, onClose }) {
     try {
       const user = await ensureAnonymousCustomer();
       const photoPath = await uploadFigurineRequestPhoto({ userId: user.id, file: photo });
-      const { data: diagnosticSessionData } = await supabase.auth.getSession();
-      const diagnosticSession = diagnosticSessionData?.session || null;
-      const diagnosticSessionUser = diagnosticSession?.user || null;
-      const diagnosticCustomerUserId = user.id;
-      console.info("[Figurine Request Diagnostic]", {
-        sessionExists: Boolean(diagnosticSession),
-        sessionUserId: diagnosticSessionUser?.id || null,
-        sessionUserIsAnonymous: diagnosticSessionUser?.is_anonymous ?? null,
-        sessionUserRole: diagnosticSessionUser?.role || null,
-        customerUserId: diagnosticCustomerUserId,
-        sessionUserMatchesCustomer: diagnosticSessionUser?.id === diagnosticCustomerUserId,
-        databaseRole: diagnosticSessionUser?.role || "unavailable from client session",
-      });
       const { data: createdRequest, error: requestError } = await supabase
         .from("figurine_requests")
         .insert({
@@ -1393,6 +1389,67 @@ function AdminPanel({ products, imgCache, variantMap = {}, onSave, onDelete, onT
 
   useEffect(() => {
     let cancelled = false;
+    let channel = null;
+
+    const sortFigurineRequests = (requests) => requests
+      .slice()
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    const enrichRealtimeRequest = async (request) => {
+      const [conversationResult, signedUrlResult] = await Promise.all([
+        supabase
+          .from("conversations")
+          .select("id, customer_user_id, customer_name, customer_phone")
+          .eq("customer_user_id", request.customer_user_id)
+          .limit(1)
+          .maybeSingle(),
+        supabase.storage
+          .from(FIGURINE_REQUEST_BUCKET)
+          .createSignedUrl(request.photo_path, 60 * 60),
+      ]);
+
+      return {
+        ...request,
+        photoUrl: signedUrlResult.data?.signedUrl || "",
+        conversation: conversationResult.data || null,
+      };
+    };
+
+    const handleRealtimeRequest = async (payload) => {
+      if (cancelled) return;
+
+      if (payload.eventType === "DELETE") {
+        const deletedId = payload.old?.id;
+        if (!deletedId) return;
+        setFigurineRequests((current) => current.filter((request) => request.id !== deletedId));
+        return;
+      }
+
+      const request = payload.new;
+      if (!request?.id) return;
+
+      const enrichedRequest = await enrichRealtimeRequest(request);
+      if (cancelled) return;
+
+      setFigurineRequests((current) => {
+        const byId = new Map(current.map((item) => [item.id, item]));
+        byId.set(request.id, { ...byId.get(request.id), ...enrichedRequest });
+        return sortFigurineRequests([...byId.values()]);
+      });
+    };
+
+    channel = supabase
+      .channel("admin-figurine-requests")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "figurine_requests" },
+        handleRealtimeRequest,
+      )
+      .subscribe((status) => {
+        if (!cancelled && (status === "CHANNEL_ERROR" || status === "TIMED_OUT")) {
+          setFigurineRequestError("Live figurine request updates are unavailable right now. Refresh to check.");
+        }
+      });
 
     const loadFigurineRequests = async () => {
       setFigurineRequestLoading(true);
@@ -1439,12 +1496,19 @@ function AdminPanel({ products, imgCache, variantMap = {}, onSave, onDelete, onT
       }));
 
       if (cancelled) return;
-      setFigurineRequests(enrichedRequests);
+      setFigurineRequests((current) => {
+        const byId = new Map(enrichedRequests.map((request) => [request.id, request]));
+        current.forEach((request) => byId.set(request.id, request));
+        return sortFigurineRequests([...byId.values()]);
+      });
       setFigurineRequestLoading(false);
     };
 
     void loadFigurineRequests();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (channel) void supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -1928,6 +1992,7 @@ export default function NanoAakriti() {
   const [filter, setFilter]       = useState("All");
   const [cart, setCart]           = useState([]);
   const [cartOpen, setCartOpen]   = useState(false);
+  const [cartFeedback, setCartFeedback] = useState("");
   const [figurineOpen, setFigurineOpen] = useState(false);
   const [chatOpen, setChatOpen]   = useState(false);
   const [chatProduct, setChatProduct] = useState(null);
@@ -1943,6 +2008,7 @@ export default function NanoAakriti() {
   const [footerRevealRef, footerRevealClass] = useScrollReveal();
   const logoTapCount              = useRef(0);
   const logoTapTimer              = useRef(null);
+  const cartFeedbackTimer         = useRef(null);
 
   const handleAdminSuccess = useCallback(() => {
     setAdminStep("panel");
@@ -1964,11 +2030,42 @@ export default function NanoAakriti() {
     setChatInitialMessage("");
   };
 
+  const showCartFeedback = (message) => {
+    setCartFeedback(message);
+    if (cartFeedbackTimer.current) window.clearTimeout(cartFeedbackTimer.current);
+    cartFeedbackTimer.current = window.setTimeout(() => setCartFeedback(""), 2400);
+  };
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    setCart((current) => {
+      let changed = false;
+      const normalized = current.flatMap((item) => {
+        const product = products.find((candidate) => candidate.id === item.id);
+        if (!product) {
+          changed = true;
+          return [];
+        }
+
+        const availableStock = getAvailableStock(product);
+        const currentQuantity = normalizeStockQuantity(item.qty, 0);
+        const nextQuantity = Math.min(currentQuantity, availableStock);
+        if (nextQuantity !== item.qty) changed = true;
+        return nextQuantity > 0 ? [{ ...item, qty: nextQuantity }] : [];
+      });
+
+      return changed ? normalized : current;
+    });
+  }, [products]);
+
+  useEffect(() => () => {
+    if (cartFeedbackTimer.current) window.clearTimeout(cartFeedbackTimer.current);
   }, []);
 
   const handleHeroPointerMove = (event) => {
@@ -2349,17 +2446,48 @@ const handleUpdateStockQuantity = async (id, nextQuantity) => {
 };
 
   const addToCart = (product) => {
-    if (!product || product.outOfStock) return;
+    if (!product) return;
+    const availableStock = getAvailableStock(product);
+    const currentQuantity = cart.find((item) => item.id === product.id)?.qty || 0;
+    if (availableStock === 0) {
+      showCartFeedback("This product is out of stock.");
+      return;
+    }
+    if (currentQuantity >= availableStock) {
+      showCartFeedback(`Only ${availableStock} available.`);
+      return;
+    }
+
     setCart(prev => {
       const exists = prev.find(item => item.id === product.id);
-      if (exists) return prev.map(item => item.id === product.id ? {...item, qty:item.qty + 1} : item);
+      if (exists) {
+        const nextQuantity = Math.min(availableStock, normalizeStockQuantity(exists.qty, 0) + 1);
+        return prev.map(item => item.id === product.id ? {...item, qty: nextQuantity} : item);
+      }
       return [...prev, { id: product.id, qty: 1 }];
     });
   };
 
   const updateCartQty = (id, delta) => {
+    const product = products.find((item) => item.id === id);
+    if (!product) return;
+
+    const availableStock = getAvailableStock(product);
+    const currentQuantity = cart.find((item) => item.id === id)?.qty || 0;
+    if (delta > 0 && currentQuantity >= availableStock) {
+      showCartFeedback(availableStock > 0 ? `Only ${availableStock} available.` : "This product is out of stock.");
+      return;
+    }
+
     setCart(prev => prev
-      .map(item => item.id === id ? {...item, qty: item.qty + delta} : item)
+      .map(item => {
+        if (item.id !== id) return item;
+        const currentItemQuantity = normalizeStockQuantity(item.qty, 0);
+        const nextQuantity = delta > 0
+          ? Math.min(availableStock, currentItemQuantity + delta)
+          : Math.max(0, currentItemQuantity + delta);
+        return { ...item, qty: nextQuantity };
+      })
       .filter(item => item.qty > 0)
     );
   };
@@ -2410,7 +2538,9 @@ const handleUpdateStockQuantity = async (id, nextQuantity) => {
   const cartItems  = cart
     .map(item => {
       const product = products.find(p => p.id === item.id);
-      return product ? { product, qty: item.qty } : null;
+      if (!product) return null;
+      const qty = Math.min(normalizeStockQuantity(item.qty, 0), getAvailableStock(product));
+      return qty > 0 ? { product, qty } : null;
     })
     .filter(Boolean);
   const cartCount = cartItems.reduce((sum, item) => sum + item.qty, 0);
@@ -2655,6 +2785,10 @@ Turn a favorite photo into a personalized figurine concept with a size chosen fo
           openChat(null, cartEnquiryMessage);
         }}
       />
+
+      {cartFeedback && (
+        <div role="status" aria-live="polite" style={{position:"fixed",left:"50%",bottom:isMobile?86:24,zIndex:1300,transform:"translateX(-50%)",maxWidth:"calc(100vw - 32px)",padding:"10px 14px",borderRadius:9,background:C.black,color:C.white,fontFamily:"DM Sans, sans-serif",fontSize:12,fontWeight:600,boxShadow:"0 12px 30px rgba(13,13,13,0.22)",textAlign:"center",whiteSpace:"nowrap"}}>{cartFeedback}</div>
+      )}
 
       <FigurineConfigurator open={figurineOpen} onClose={() => setFigurineOpen(false)} />
 
