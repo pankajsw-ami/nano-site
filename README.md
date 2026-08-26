@@ -164,7 +164,7 @@ flowchart TD
     D --> H[📡 Realtime]
 
     I[🛠️ Admin Panel] --> D
-
+```
 🚀 Getting Started
 
 1. Clone the repository
@@ -265,7 +265,7 @@ flowchart TD
     D --> D2["📂 migrations"]
 
     D1 --> D1A["📧 notify-customer-message/"]
-
+```
 🌐 Live Deployment
 
 Live application: https://nano-site-ashy.vercel.app/
