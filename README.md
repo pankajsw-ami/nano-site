@@ -149,26 +149,21 @@ Development
 
 🔍 AI-assisted debugging, code review, and verification
 
-🏗️ Architecture
+## 🏗️ Architecture
 
-┌───────────────────────────────┐
-│        React Frontend         │
-│  Storefront • Cart • Chat     │
-│  Figurine Request • Admin UI  │
-└───────────────┬───────────────┘
-                │
-                ▼
-┌───────────────────────────────┐
-│          Supabase             │
-│  PostgreSQL • Auth • Storage  │
-│        • Realtime             │
-└───────────────┬───────────────┘
-                │
-                ▼
-┌───────────────────────────────┐
-│            Vercel             │
-│        Production Hosting     │
-└───────────────────────────────┘
+```mermaid
+flowchart TD
+    A[👤 Customer] --> B[⚛️ React Frontend]
+    B --> C[☁️ Vercel]
+
+    B --> D[⚡ Supabase]
+
+    D --> E[(🐘 PostgreSQL)]
+    D --> F[🔐 Auth]
+    D --> G[🗄️ Storage]
+    D --> H[📡 Realtime]
+
+    I[🛠️ Admin Panel] --> D
 
 🚀 Getting Started
 
@@ -242,25 +237,34 @@ The project follows a verification-first workflow:
 
 AI output is reviewed, tested, debugged, and modified manually before being considered production-ready.
 
-📁 Project Structure
+📁## 📁 Project Structure
 
-nano-site/
-├── public/
-│   ├── logo.png
-│   └── ...
-├── src/
-│   ├── components/
-│   │   └── chat/
-│   ├── lib/
-│   ├── NanoAakriti.jsx
-│   ├── App.js
-│   └── ...
-├── supabase/
-│   ├── functions/
-│   └── migrations/
-├── .env.example
-├── package.json
-└── README.md
+```mermaid
+flowchart TD
+    A["📦 nano-site"] --> B["📂 public"]
+    A --> C["📂 src"]
+    A --> D["📂 supabase"]
+    A --> E["📄 .env.example"]
+    A --> F["📄 package.json"]
+    A --> G["📄 README.md"]
+
+    B --> B1["🖼️ logo.png"]
+    B --> B2["📄 index.html"]
+
+    C --> C1["📂 components"]
+    C --> C2["📂 lib"]
+    C --> C3["📄 NanoAakriti.jsx"]
+    C --> C4["📄 App.js"]
+    C --> C5["📄 index.css"]
+
+    C1 --> C1A["💬 chat/"]
+    C2 --> C2A["🔌 supabaseClient.js"]
+    C2 --> C2B["🧍 figurineRequests.js"]
+
+    D --> D1["📂 functions"]
+    D --> D2["📂 migrations"]
+
+    D1 --> D1A["📧 notify-customer-message/"]
 
 🌐 Live Deployment
 
