@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "./lib/supabaseClient";
+import nanoHeroImage from "./assets/images/nano-hero.png";
 import ChatWidget from "./components/chat/ChatWidget";
 import AdminLogin from "./components/chat/AdminLogin";
 import AdminChatDashboard from "./components/chat/AdminChatDashboard";
@@ -77,6 +78,26 @@ const C = {
 };
 
 const defaultProducts = [];
+
+const TRUST_ITEMS = [
+  { icon: "printer", title: "Advanced 3D Printers", text: "For high precision prints" },
+  { icon: "material", title: "Wide Range of Materials", text: "PLA, PETG, ABS, ASA & more" },
+  { icon: "palette", title: "Custom Colors Available", text: "Make it your own" },
+  { icon: "package", title: "Secure Packaging", text: "Safe delivery to your door" },
+];
+
+const PROCESS_STEPS = [
+  { icon: "upload", number: "1", title: "Share Your Idea", text: "Upload your design or share your concept" },
+  { icon: "quote", number: "2", title: "Get a Quote", text: "We review and send you the best quote" },
+  { icon: "printer", number: "3", title: "We Print", text: "High quality 3D printing with care" },
+  { icon: "package", number: "4", title: "Delivered", text: "Carefully packed and delivered to you" },
+];
+
+const WHY_ITEMS = [
+  { icon: "detail", title: "Built for detail", text: "Careful printing and finishing for pieces that look as good as the idea." },
+  { icon: "layers", title: "Made for every need", text: "From creative collectibles to practical parts, we print with purpose." },
+  { icon: "support", title: "Human support", text: "Have a question? Our in-built chat keeps your enquiry simple and direct." },
+];
 
 const readStore = async (key) => {
   try {
@@ -352,7 +373,15 @@ function MotionStyles() {
       .nano-depth-node-one { top: 22%; left: 23%; }
       .nano-depth-node-two { right: 23%; bottom: 28%; animation-delay: -1.5s; }
 
-      .nano-hero-content { transform: translateZ(26px); transform-style: preserve-3d; }
+      .nano-hero-content {
+        position: relative;
+        z-index: 2;
+        min-height: 560px;
+        display: flex;
+        align-items: center;
+        transform: translateZ(26px);
+        transform-style: preserve-3d;
+      }
 
       .nano-hero-content,
       .nano-stats,
@@ -464,6 +493,205 @@ function MotionStyles() {
         box-shadow: 0 30px 80px rgba(13,13,13,0.35), 0 8px 0 rgba(232,93,4,0.08);
       }
 
+      .nano-home-section {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 82px 24px;
+      }
+
+      .nano-section-kicker {
+        color: #E85D04;
+        font-family: "DM Sans", sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      .nano-section-title {
+        margin: 8px 0 0;
+        color: #0D0D0D;
+        font-family: "Inter", sans-serif;
+        font-size: clamp(26px, 3.4vw, 38px);
+        font-weight: 800;
+        letter-spacing: -0.7px;
+        line-height: 1.12;
+      }
+
+      .nano-section-copy {
+        max-width: 580px;
+        margin: 14px auto 0;
+        color: #4A4A4A;
+        font-family: "DM Sans", sans-serif;
+        font-size: 15px;
+        line-height: 1.65;
+      }
+
+      .nano-hero-background {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 60% center;
+        transform: translateX(6%);
+        -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.04) 24%, rgba(0,0,0,0.55) 43%, #000 61%, #000 100%);
+        mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.04) 24%, rgba(0,0,0,0.55) 43%, #000 61%, #000 100%);
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+      }
+
+      .nano-hero-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background: linear-gradient(90deg, rgba(248,247,244,0.96) 0%, rgba(248,247,244,0.84) 28%, rgba(248,247,244,0.3) 58%, rgba(248,247,244,0.02) 100%);
+      }
+
+      .nano-trust-strip {
+        position: relative;
+        z-index: 3;
+        max-width: 1120px;
+        margin: -28px auto 0;
+        padding: 0 24px;
+      }
+
+      .nano-trust-card {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        overflow: hidden;
+        border: 1px solid #E8E6E0;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.94);
+        box-shadow: 0 18px 42px rgba(13,13,13,0.1);
+        backdrop-filter: blur(12px);
+      }
+
+      .nano-trust-item,
+      .nano-category-card,
+      .nano-process-card,
+      .nano-why-card {
+        transition: transform 240ms ease, border-color 240ms ease, box-shadow 240ms ease;
+      }
+
+      .nano-trust-item:hover,
+      .nano-category-card:hover,
+      .nano-process-card:hover,
+      .nano-why-card:hover {
+        border-color: rgba(232,93,4,0.4) !important;
+        box-shadow: 0 16px 30px rgba(13,13,13,0.1);
+        transform: translateY(-4px);
+      }
+
+      .nano-category-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+
+      .nano-category-card {
+        overflow: hidden;
+        border: 1px solid #E8E6E0;
+        border-radius: 14px;
+        background: #FFFFFF;
+        box-shadow: 0 8px 22px rgba(13,13,13,0.06);
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .nano-category-image {
+        height: 150px;
+        overflow: hidden;
+        background: #F8F7F4;
+      }
+
+      .nano-category-image img,
+      .nano-category-image svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 360ms ease;
+      }
+
+      .nano-category-card:hover .nano-category-image img,
+      .nano-category-card:hover .nano-category-image svg {
+        transform: scale(1.045);
+      }
+
+      .nano-process-line {
+        position: absolute;
+        top: 34px;
+        right: calc(-50% + 22px);
+        left: calc(50% + 22px);
+        border-top: 1px dashed rgba(232,93,4,0.35);
+      }
+
+      .nano-custom-panel {
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        background: linear-gradient(120deg, #0D0D0D 0%, #211812 58%, #E85D04 170%);
+        box-shadow: 0 24px 52px rgba(13,13,13,0.18);
+      }
+
+      .nano-custom-panel::after {
+        position: absolute;
+        top: -100px;
+        right: -90px;
+        width: 280px;
+        height: 280px;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 50%;
+        box-shadow: 0 0 0 24px rgba(255,255,255,0.04), 0 0 0 48px rgba(255,255,255,0.03);
+        content: "";
+      }
+
+      .nano-stat-panel {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        overflow: hidden;
+        border-radius: 18px;
+        background: #0D0D0D;
+        box-shadow: 0 18px 38px rgba(13,13,13,0.16);
+      }
+
+      .nano-stat-panel .nano-stat:hover {
+        background: rgba(255,255,255,0.07);
+      }
+
+      @media (max-width: 900px) {
+        .nano-category-grid { grid-template-columns: repeat(2, 1fr); }
+        .nano-trust-card { grid-template-columns: repeat(2, 1fr); }
+        .nano-process-line { display: none; }
+      }
+
+      @media (max-width: 640px) {
+        .nano-home-section { padding: 58px 16px; }
+        .nano-hero { padding: 20px 16px 30px !important; text-align: left !important; }
+        .nano-hero-background {
+          object-fit: contain;
+          object-position: 92% 24%;
+          transform: translateX(5%);
+          -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.03) 28%, rgba(0,0,0,0.5) 52%, #000 76%, #000 100%);
+          mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.03) 28%, rgba(0,0,0,0.5) 52%, #000 76%, #000 100%);
+        }
+        .nano-hero-overlay { background: linear-gradient(90deg, rgba(248,247,244,0.97) 0%, rgba(248,247,244,0.84) 42%, rgba(248,247,244,0.14) 100%); }
+        .nano-hero-content { min-height: 0 !important; align-items: flex-start !important; margin: 0 !important; }
+        .nano-hero-content > div:first-child { margin: 0 !important; text-align: left !important; }
+        .nano-hero-content > div > div:last-child { flex-direction: row !important; justify-content: flex-start !important; align-items: stretch !important; gap: 6px !important; width: 100%; }
+        .nano-hero-content > div > div:last-child .nano-cta { flex: 1 1 0; min-width: 0; padding: 11px 10px !important; font-size: 11px !important; letter-spacing: 0 !important; white-space: nowrap; text-align: center; }
+        .nano-trust-strip { margin-top: -18px; padding: 0 16px; }
+        .nano-category-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .nano-category-image { height: 112px; }
+        .nano-stat-panel { grid-template-columns: repeat(2, 1fr); }
+      }
+
       .nano-cta:active,
       .nano-nav-link:active,
       .nano-filter:active {
@@ -503,6 +731,22 @@ function CartIcon({ size = 20, color = "currentColor" }) {
       <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h8.9a2 2 0 0 0 1.96-1.6l1.24-6.4H5.12"/>
     </svg>
   );
+}
+
+function HomepageIcon({ name, size = 28, color = C.orange }) {
+  const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" };
+  const paths = {
+    printer: <><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/><path d="M17 12h.01"/></>,
+    material: <><path d="M4 7.5 12 3l8 4.5-8 4.5-8-4.5Z"/><path d="M4 12.5 12 17l8-4.5"/><path d="M4 7.5v5M12 12v5M20 7.5v5"/><path d="M4 17.5 12 22l8-4.5"/></>,
+    palette: <><path d="M12 3a9 9 0 0 0 0 18h1.2a1.8 1.8 0 0 0 1.2-3.1 1.8 1.8 0 0 1 1.2-3.1H18a3 3 0 0 0 3-3C21 6.9 17 3 12 3Z"/><circle cx="7.5" cy="10" r=".8" fill={color}/><circle cx="10" cy="6.8" r=".8" fill={color}/><circle cx="14" cy="6.8" r=".8" fill={color}/><circle cx="17" cy="10" r=".8" fill={color}/></>,
+    package: <><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/><path d="m7.5 5 9 4"/></>,
+    upload: <><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></>,
+    quote: <><path d="M4 4h12a2 2 0 0 1 2 2v13l-4-2-4 2-4-2-4 2V6a2 2 0 0 1 2-2Z"/><path d="M8 8h6M8 12h6"/><circle cx="18" cy="17" r="3" fill={C.white}/><path d="M18 15.7v1.5l1 1"/></>,
+    detail: <><path d="m12 3 2.1 4.3 4.7.7-3.4 3.3.8 4.7-4.2-2.2-4.2 2.2.8-4.7-3.4-3.3 4.7-.7L12 3Z"/><path d="M7 19h10M9 22h6"/></>,
+    layers: <><path d="m12 3 8 4-8 4-8-4 8-4Z"/><path d="m4 12 8 4 8-4"/><path d="m4 17 8 4 8-4"/></>,
+    support: <><path d="M4 13a8 8 0 0 1 16 0"/><path d="M4 13v3a2 2 0 0 0 2 2h1v-5H4ZM20 13v3a2 2 0 0 1-2 2h-1v-5h3Z"/><path d="M17 20h-2"/></>,
+  };
+  return <svg {...common}>{paths[name] || paths.detail}</svg>;
 }
 
 function CartDrawer({ open, cartItems, cartCount, total, onClose, onQty, onRemove, onClear, onSendEnquiry }) {
@@ -2003,8 +2247,14 @@ export default function NanoAakriti() {
   const [reviewMsg, setReviewMsg] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [heroRevealRef, heroRevealClass] = useScrollReveal();
+  const [trustRevealRef, trustRevealClass] = useScrollReveal();
   const [categoryRevealRef, categoryRevealClass] = useScrollReveal();
+  const [processRevealRef, processRevealClass] = useScrollReveal();
   const [gridRevealRef, gridRevealClass] = useScrollReveal();
+  const [customRevealRef, customRevealClass] = useScrollReveal();
+  const [whyRevealRef, whyRevealClass] = useScrollReveal();
+  const [statsRevealRef, statsRevealClass] = useScrollReveal();
+  const [finalRevealRef, finalRevealClass] = useScrollReveal();
   const [footerRevealRef, footerRevealClass] = useScrollReveal();
   const logoTapCount              = useRef(0);
   const logoTapTimer              = useRef(null);
@@ -2534,6 +2784,19 @@ const handleUpdateStockQuantity = async (id, nextQuantity) => {
   const isTablet = useWindowWidth() < 900;
 
   const categories = ["All",...Array.from(new Set(products.map(p=>p.category)))];
+  const categoryCards = categories
+    .filter((category) => category !== "All")
+    .map((category) => {
+      const categoryProduct = products.find((product) => product.category === category);
+      const categoryVariant = categoryProduct
+        ? (productVariants[categoryProduct.id] || []).find((variant) => variant.active)
+        : null;
+      return {
+        name: category,
+        product: categoryProduct,
+        image: categoryVariant?.imageUrl || (categoryProduct ? imgCache[categoryProduct.id] : null) || "",
+      };
+    });
   const filtered   = filter==="All" ? products : products.filter(p=>p.category===filter);
   const cartItems  = cart
     .map(item => {
@@ -2555,6 +2818,11 @@ const handleUpdateStockQuantity = async (id, nextQuantity) => {
     `Cart Total: Rs. ${cartTotal.toLocaleString("en-IN")}`,
   ].join("\n");
   const averageRating = reviews.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
+
+  const browseProducts = (category = "All") => {
+    setFilter(category);
+    window.setTimeout(() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+  };
 
   /* ADMIN LOGIN */
   /*
@@ -2633,7 +2901,9 @@ const handleUpdateStockQuantity = async (id, nextQuantity) => {
       </header>
 
       {/* Hero */}
-      <section ref={heroRevealRef} className={`nano-hero nano-scroll-reveal ${heroRevealClass}`} onPointerMove={handleHeroPointerMove} onPointerLeave={resetHeroPointer} style={{background:`linear-gradient(135deg,${C.offWhite} 0%,${C.white} 48%,${C.gray} 100%)`,padding:isMobile?"48px 20px 56px":"72px 32px 80px",textAlign:"center",position:"relative",overflow:"hidden",borderBottom:`1px solid ${C.gray}`}}>
+      <section ref={heroRevealRef} className={`nano-hero nano-scroll-reveal ${heroRevealClass}`} onPointerMove={handleHeroPointerMove} onPointerLeave={resetHeroPointer} style={{background:`linear-gradient(135deg,${C.offWhite} 0%,${C.white} 48%,${C.gray} 100%)`,padding:isMobile?"44px 20px 54px":"64px 32px 72px",textAlign:isMobile?"left":isTablet?"center":"left",position:"relative",overflow:"hidden",borderBottom:`1px solid ${C.gray}`}}>
+        <img className="nano-hero-background" src={nanoHeroImage} alt="" aria-hidden="true" />
+        <div className="nano-hero-overlay" aria-hidden="true" />
         <div className="nano-hero-wash" style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(120deg,rgba(232,93,4,0.12),transparent 36%,rgba(13,13,13,0.06) 72%,rgba(255,255,255,0.3))"}}/>
         <div className="nano-hero-depth" aria-hidden="true">
           <span className="nano-depth-grid" />
@@ -2644,26 +2914,90 @@ const handleUpdateStockQuantity = async (id, nextQuantity) => {
           <span className="nano-depth-node nano-depth-node-one" />
           <span className="nano-depth-node nano-depth-node-two" />
         </div>
-        <div className="nano-hero-content" style={{position:"relative",maxWidth:680,margin:"0 auto"}}>
-          <span className="nano-pill" style={{display:"inline-block",background:"rgba(255,255,255,0.62)",color:C.orange,border:"1px solid rgba(232,93,4,0.24)",boxShadow:"0 8px 22px rgba(92,68,40,0.08)",padding:"5px 16px",borderRadius:20,fontFamily:"DM Sans, sans-serif",fontSize:11,letterSpacing:"2px",textTransform:"uppercase",marginBottom:18}}>3D Design Studio</span>
-          <h1 className="nano-title" style={{margin:"0 0 16px",fontFamily:"Inter, sans-serif",fontWeight:800,fontSize:isMobile?"28px":"clamp(30px,5.5vw,52px)",color:C.black,lineHeight:1.15,letterSpacing:0}}>
-            Premium 3D Models,<br/><span style={{color:C.orange}}>Crafted to Print</span>
-          </h1>
-          <p className="nano-copy" style={{margin:"0 0 28px",fontFamily:"DM Sans, sans-serif",fontSize:isMobile?15:17,color:C.darkGray,lineHeight:1.65,fontWeight:300,padding:isMobile?"0 8px":0}}>
-            Ready-to-print STL files — fantasy figures, functional decor &amp; more. Prompt delivery after your enquiry.
-          </p>
-          <p style={{maxWidth:520,margin:"-10px auto 16px",fontFamily:"DM Sans, sans-serif",fontSize:isMobile?13:14,color:C.midGray,lineHeight:1.55}}>
-Turn a favorite photo into a personalized figurine concept with a size chosen for your needs.
-          </p>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",flexDirection:isMobile?"column":"row",gap:10}}>
-            <a className="nano-cta" href="#products" style={{display:"inline-block",background:C.orange,color:C.white,textDecoration:"none",padding:isMobile?"12px 28px":"13px 32px",borderRadius:10,fontFamily:"Inter, sans-serif",fontWeight:700,fontSize:isMobile?14:15,boxShadow:"0 12px 28px rgba(232,93,4,0.18)"}}>Browse Collection ↓</a>
-            <button type="button" className="nano-cta" onClick={() => setFigurineOpen(true)} style={{display:"inline-block",background:C.black,color:C.white,border:`1px solid ${C.black}`,padding:isMobile?"12px 28px":"13px 32px",borderRadius:10,fontFamily:"Inter, sans-serif",fontWeight:700,fontSize:isMobile?14:15,boxShadow:"0 12px 28px rgba(13,13,13,0.16)",cursor:"pointer"}}>Create Your Figurine ✦</button>
+        <div className="nano-hero-content" style={{position:"relative",zIndex:2,maxWidth:1200,minHeight:isMobile?500:isTablet?520:560,margin:"0 auto",display:"flex",alignItems:"center"}}>
+          <div style={{maxWidth:570,margin:isMobile?0:isTablet?"0 auto":0}}>
+            <span className="nano-pill" style={{display:"inline-block",background:"rgba(255,255,255,0.72)",color:C.orange,border:"1px solid rgba(232,93,4,0.24)",boxShadow:"0 8px 22px rgba(92,68,40,0.08)",padding:"6px 15px",borderRadius:20,fontFamily:"DM Sans, sans-serif",fontSize:10,letterSpacing:"1.6px",fontWeight:700,textTransform:"uppercase",marginBottom:18}}>3D PRINTING &amp; CUSTOM CREATIONS</span>
+            <h1 className="nano-title" style={{margin:"0 0 16px",fontFamily:"Inter, sans-serif",fontWeight:800,fontSize:isMobile?"34px":"clamp(42px,5.2vw,70px)",color:C.black,lineHeight:1.06,letterSpacing:"-1.8px"}}>
+              Bring Your Ideas<br/><span style={{color:C.orange}}>to Life in 3D</span>
+            </h1>
+            <p className="nano-copy" style={{maxWidth:535,margin:"0 0 28px",fontFamily:"DM Sans, sans-serif",fontSize:isMobile?15:17,color:C.darkGray,lineHeight:1.65,fontWeight:300}}>
+              High quality 3D prints for every need – from custom designs to functional parts and unique collectibles.
+            </p>
+            <div style={{display:"flex",alignItems:"center",justifyContent:isMobile?"flex-start":isTablet?"center":"flex-start",flexDirection:isMobile?"column":"row",gap:10}}>
+              <button type="button" className="nano-cta" onClick={() => setFigurineOpen(true)} style={{display:"inline-block",background:C.orange,color:C.white,border:"none",padding:isMobile?"13px 24px":"14px 28px",borderRadius:10,fontFamily:"Inter, sans-serif",fontWeight:700,fontSize:isMobile?14:15,boxShadow:"0 12px 28px rgba(232,93,4,0.22)",cursor:"pointer"}}>Order Custom Print →</button>
+              <a className="nano-cta" href="#products" style={{display:"inline-block",background:C.white,color:C.black,border:`1px solid ${C.gray}`,textDecoration:"none",padding:isMobile?"13px 24px":"14px 28px",borderRadius:10,fontFamily:"Inter, sans-serif",fontWeight:700,fontSize:isMobile?14:15,boxShadow:"0 8px 20px rgba(13,13,13,0.07)"}}>Browse Products →</a>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Stats */}
-      <div ref={categoryRevealRef} className={`nano-stats nano-scroll-reveal ${categoryRevealClass}`} style={{background:"rgba(248,247,244,0.82)",backdropFilter:"blur(10px)",borderBottom:`1px solid ${C.gray}`}}>
+      {/* Feature / trust strip */}
+      <section ref={trustRevealRef} className={`nano-trust-strip nano-scroll-reveal ${trustRevealClass}`} aria-label="Nano Aakriti features">
+        <div className="nano-trust-card">
+          {TRUST_ITEMS.map((item, index) => (
+            <article key={item.title} className="nano-trust-item" style={{display:"flex",alignItems:"center",gap:12,padding:isMobile?"16px 14px":"20px 22px",borderRight:index % 2 === 0 && isMobile ? `1px solid ${C.gray}` : !isMobile && index < TRUST_ITEMS.length - 1 ? `1px solid ${C.gray}` : "none",borderBottom:isMobile && index < 2 ? `1px solid ${C.gray}` : "none"}}>
+              <HomepageIcon name={item.icon} size={isMobile?27:31}/>
+              <div>
+                <strong style={{display:"block",fontFamily:"Inter, sans-serif",fontSize:isMobile?12:13,color:C.black,lineHeight:1.25}}>{item.title}</strong>
+                <span style={{display:"block",marginTop:4,fontFamily:"DM Sans, sans-serif",fontSize:11,color:C.midGray,lineHeight:1.25}}>{item.text}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* Shop by category */}
+      <section ref={categoryRevealRef} className={`nano-home-section nano-scroll-reveal ${categoryRevealClass}`}>
+        <div style={{textAlign:"center",marginBottom:30}}>
+          <span className="nano-section-kicker">Find your next print</span>
+          <h2 className="nano-section-title">Shop by Category</h2>
+          <p className="nano-section-copy">Explore thoughtfully designed prints for your home, desk, hobbies and everyday ideas.</p>
+        </div>
+        {categoryCards.length ? (
+          <div className="nano-category-grid">
+            {categoryCards.map((item) => (
+              <button type="button" key={item.name} className="nano-category-card" onClick={() => browseProducts(item.name)} style={{padding:0,color:C.black}}>
+                <div className="nano-category-image">
+                  {item.image ? <img src={item.image} alt={`${item.name} products`} /> : <ProductSVG product={item.product} />}
+                </div>
+                <div style={{padding:"14px 15px 16px"}}>
+                  <strong style={{display:"block",fontFamily:"Inter, sans-serif",fontSize:14,color:C.black}}>{item.name}</strong>
+                  <span style={{display:"block",marginTop:5,fontFamily:"DM Sans, sans-serif",fontSize:12,color:C.orange,fontWeight:600}}>{products.filter((product) => product.category === item.name).length} products →</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p style={{margin:0,padding:"24px 0",textAlign:"center",fontFamily:"DM Sans, sans-serif",fontSize:14,color:C.midGray}}>Categories will appear as products are added.</p>
+        )}
+      </section>
+
+      {/* How it works */}
+      <section ref={processRevealRef} className={`nano-home-section nano-scroll-reveal ${processRevealClass}`} style={{maxWidth:"none",background:C.offWhite}}>
+        <div style={{maxWidth:1120,margin:"0 auto"}}>
+          <div style={{textAlign:"center",marginBottom:38}}>
+            <span className="nano-section-kicker">From idea to object</span>
+            <h2 className="nano-section-title">How It Works</h2>
+            <p className="nano-section-copy">A clear, friendly process from your first idea to a carefully packed print.</p>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":isTablet?"repeat(2,1fr)":"repeat(4,1fr)",gap:isMobile?18:22}}>
+            {PROCESS_STEPS.map((step, index) => (
+              <article key={step.title} className="nano-process-card" style={{position:"relative",padding:isMobile?"0 5px":"0 10px",textAlign:"center"}}>
+                {index < PROCESS_STEPS.length - 1 && <span className="nano-process-line" aria-hidden="true" />}
+                <div style={{position:"relative",zIndex:1,width:68,height:68,margin:"0 auto 18px",display:"grid",placeItems:"center",border:`1px solid ${C.gray}`,borderRadius:"50%",background:C.white,boxShadow:"0 10px 24px rgba(13,13,13,0.08)"}}>
+                  <HomepageIcon name={step.icon} size={30}/>
+                </div>
+                <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:22,height:22,marginBottom:9,borderRadius:"50%",background:C.orange,color:C.white,fontFamily:"Inter, sans-serif",fontSize:11,fontWeight:700}}>{step.number}</span>
+                <h3 style={{margin:"0 0 7px",fontFamily:"Inter, sans-serif",fontSize:15,color:C.black}}>{step.title}</h3>
+                <p style={{margin:0,fontFamily:"DM Sans, sans-serif",fontSize:12,color:C.midGray,lineHeight:1.5}}>{step.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Statistics strip moved below the product collection */}
+      <div style={{display:"none"}}>
         <div style={{maxWidth:900,margin:"0 auto",display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(4,1fr)"}}>
           {[["50+","3D Models"],["100%","Print-Ready"],["Instant","Delivery"],["₹249+","Starting"]].map(([v,l],i)=>(
             <div className="nano-stat" key={i} style={{padding:isMobile?"14px 10px":"18px 36px",textAlign:"center",borderRight:isMobile?(i%2===0?`1px solid ${C.gray}`:"none"):(i<3?`1px solid ${C.gray}`:"none"),borderBottom:isMobile&&i<2?`1px solid ${C.gray}`:"none"}}>
@@ -2678,8 +3012,9 @@ Turn a favorite photo into a personalized figurine concept with a size chosen fo
       <main id="products" style={{maxWidth:1100,margin:"0 auto",padding:isMobile?"32px 16px 60px":"52px 24px 80px"}}>
         <div className="nano-section-head" style={{display:"flex",alignItems:isMobile?"flex-start":"center",justifyContent:"space-between",marginBottom:24,flexDirection:isMobile?"column":"row",gap:14}}>
           <div>
-            <h2 style={{margin:"0 0 4px",fontFamily:"Inter, sans-serif",fontWeight:800,fontSize:isMobile?22:26,color:C.black,letterSpacing:0}}>Our Collection</h2>
-            <p style={{margin:0,fontFamily:"DM Sans, sans-serif",fontSize:13,color:C.midGray}}>{filtered.length} model{filtered.length!==1?"s":""}</p>
+            <span className="nano-section-kicker">Made to be useful, fun and yours</span>
+            <h2 style={{margin:"8px 0 4px",fontFamily:"Inter, sans-serif",fontWeight:800,fontSize:isMobile?28:38,color:C.black,letterSpacing:"-0.7px"}}>Popular Prints</h2>
+            <p style={{margin:0,fontFamily:"DM Sans, sans-serif",fontSize:13,color:C.midGray}}>{filtered.length} model{filtered.length!==1?"s":""} available in the collection</p>
           </div>
           <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
             {categories.map(cat=>(
@@ -2694,6 +3029,70 @@ Turn a favorite photo into a personalized figurine concept with a size chosen fo
             </div>
         }
       </main>
+
+      {/* Custom print */}
+      <section ref={customRevealRef} className={`nano-home-section nano-scroll-reveal ${customRevealClass}`} style={{paddingTop:0}}>
+        <div className="nano-custom-panel" style={{display:"grid",gridTemplateColumns:isTablet?"1fr":"1.15fr 0.85fr",gap:isMobile?28:46,alignItems:"center",padding:isMobile?"34px 24px":"54px 58px"}}>
+          <div style={{position:"relative",zIndex:1}}>
+            <span style={{color:"#F7B085",fontFamily:"DM Sans, sans-serif",fontSize:11,fontWeight:700,letterSpacing:"2px",textTransform:"uppercase"}}>Custom print studio</span>
+            <h2 style={{margin:"10px 0 12px",color:C.white,fontFamily:"Inter, sans-serif",fontSize:"clamp(26px,3.5vw,42px)",fontWeight:800,lineHeight:1.12,letterSpacing:"-0.7px"}}>Have an idea?<br/><span style={{color:"#F7B085"}}>Let’s make it real.</span></h2>
+            <p style={{maxWidth:520,margin:"0 0 22px",color:"rgba(255,255,255,0.76)",fontFamily:"DM Sans, sans-serif",fontSize:15,lineHeight:1.65}}>Share your concept or photo and we’ll help you turn it into a thoughtful physical print. Start with a personalized figurine request or message us about your idea.</p>
+            <button type="button" className="nano-cta" onClick={() => setFigurineOpen(true)} style={{background:C.orange,color:C.white,border:0,borderRadius:9,padding:"13px 23px",fontFamily:"Inter, sans-serif",fontSize:14,fontWeight:700,cursor:"pointer"}}>Order Custom Print →</button>
+          </div>
+          <div style={{position:"relative",zIndex:1,display:"flex",justifyContent:"center",alignItems:"center",minHeight:isMobile?140:190}} aria-hidden="true">
+            <div style={{position:"absolute",width:isMobile?150:220,height:isMobile?150:220,border:"1px solid rgba(255,255,255,0.28)",borderRadius:"50%",boxShadow:"0 0 0 20px rgba(255,255,255,0.04), 0 0 0 42px rgba(255,255,255,0.03)"}}/>
+            <div style={{position:"relative",display:"grid",placeItems:"center",width:94,height:94,borderRadius:22,background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.3)",transform:"rotate(-8deg)",boxShadow:"0 18px 32px rgba(0,0,0,0.2)"}}><HomepageIcon name="printer" size={50} color="#F7B085"/></div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why choose Nano Aakriti */}
+      <section ref={whyRevealRef} className={`nano-home-section nano-scroll-reveal ${whyRevealClass}`} style={{paddingTop:isMobile?56:72}}>
+        <div style={{textAlign:"center",marginBottom:30}}>
+          <span className="nano-section-kicker">The Nano Aakriti difference</span>
+          <h2 className="nano-section-title">Why Choose Nano Aakriti?</h2>
+          <p className="nano-section-copy">Premium-looking prints, practical choices and a team that cares about the final result.</p>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":isTablet?"1fr 1fr":"repeat(3,1fr)",gap:16}}>
+          {WHY_ITEMS.map((item) => (
+            <article key={item.title} className="nano-why-card" style={{padding:isMobile?20:24,border:`1px solid ${C.gray}`,borderRadius:14,background:C.white,boxShadow:"0 8px 22px rgba(13,13,13,0.05)"}}>
+              <div style={{width:48,height:48,display:"grid",placeItems:"center",marginBottom:18,borderRadius:13,background:"rgba(232,93,4,0.1)"}}><HomepageIcon name={item.icon} size={25}/></div>
+              <h3 style={{margin:"0 0 8px",fontFamily:"Inter, sans-serif",fontSize:17,color:C.black}}>{item.title}</h3>
+              <p style={{margin:0,fontFamily:"DM Sans, sans-serif",fontSize:13,color:C.midGray,lineHeight:1.65}}>{item.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* Statistics */}
+      <section ref={statsRevealRef} className={`nano-home-section nano-scroll-reveal ${statsRevealClass}`} style={{paddingTop:0}}>
+        <div className="nano-stat-panel">
+          {[
+            [products.length ? `${products.length}+` : "—", "Models in collection"],
+            ["100%", "Quality-focused printing"],
+            [reviews.length ? `${averageRating.toFixed(1)}★` : "—", "Customer rating"],
+            ["1:1", "Direct customer support"],
+          ].map(([value, label], index) => (
+            <div className="nano-stat" key={label} style={{padding:isMobile?"22px 12px":"27px 24px",textAlign:"center",borderRight:isMobile?(index % 2 === 0 ? `1px solid rgba(255,255,255,0.12)` : "none"):(index < 3 ? `1px solid rgba(255,255,255,0.12)` : "none"),borderBottom:isMobile && index < 2 ? `1px solid rgba(255,255,255,0.12)` : "none"}}>
+              <div style={{fontFamily:"Inter, sans-serif",fontWeight:800,fontSize:isMobile?22:27,color:C.orange}}>{value}</div>
+              <div style={{fontFamily:"DM Sans, sans-serif",fontSize:11,color:"rgba(255,255,255,0.7)",marginTop:5,letterSpacing:"0.3px"}}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section ref={finalRevealRef} className={`nano-home-section nano-scroll-reveal ${finalRevealClass}`} style={{paddingTop:0,textAlign:"center"}}>
+        <div style={{padding:isMobile?"38px 22px":"48px 32px",border:`1px solid ${C.gray}`,borderRadius:18,background:C.white,boxShadow:"0 12px 30px rgba(13,13,13,0.06)"}}>
+          <span className="nano-section-kicker">Ready when you are</span>
+          <h2 className="nano-section-title">Let’s build something amazing together.</h2>
+          <p className="nano-section-copy">From small ideas to big creations, we bring them to life in 3D.</p>
+          <div style={{display:"flex",justifyContent:"center",flexWrap:"wrap",gap:10,marginTop:24}}>
+            <button type="button" className="nano-cta" onClick={() => setFigurineOpen(true)} style={{background:C.orange,color:C.white,border:0,borderRadius:9,padding:"13px 24px",fontFamily:"Inter, sans-serif",fontSize:14,fontWeight:700,cursor:"pointer"}}>Order Custom Print →</button>
+            <a className="nano-cta" href="#products" style={{background:C.offWhite,color:C.black,border:`1px solid ${C.gray}`,borderRadius:9,padding:"13px 24px",fontFamily:"Inter, sans-serif",fontSize:14,fontWeight:700,textDecoration:"none"}}>Browse Products →</a>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer ref={footerRevealRef} className={`nano-footer nano-scroll-reveal ${footerRevealClass}`} style={{background:`linear-gradient(135deg,${C.warmGlow} 0%,${C.coolMist} 100%)`,borderTop:`1px solid ${C.gray}`,padding:isMobile?"28px 16px":"36px 32px",textAlign:"center"}}>
